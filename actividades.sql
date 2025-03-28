@@ -1,3 +1,5 @@
+--SQL Developer
+
 -- PAGINA 17 --
 /*
 ¿Cómo sería el código 
@@ -455,11 +457,73 @@ create or replace TRIGGER t_edad
     end;
 
 -- 2) Crea un trigger que recoja en una tabla externa los cambios en datos de asignaturas a modo de histórico de cambios
-create or replace TRIGGER t_historico
-    after update on asignaturas
+create table h_asignaturas like asignaturas;
+
+create or replace TRIGGER t_asignaturas
+    before update on asignaturas
     for each row
     begin
-    
-
+        insert into h_asignaturas values (:old.Codas, :new.Cods :old.Nombre, :old.Curso, sysdate);
     end;
 
+-- 3) Crea un trigger que impida borrar las notas de GBD
+
+create or replace TRIGGER t_notas
+    before delete on notas
+    for each row 
+    BEGIN
+        if old.Codas='GBD' then
+            RAISE_APPLICATION_ERROR (-29124, 'No se puede borrar la nota de GBD');
+        end if;
+    END;
+
+--4) Crea un trigger que automáticamente inserte las notas con el mínimo a 0 y tope a 10.
+create or replace TRIGGER t_notas
+    before insert on notas
+    for each row
+    begin
+        if :new.Nota < 0 then
+            :new.Nota:=0;
+        elsif :new.Nota > 10 then
+            :new.Nota:=10;
+        end if;
+    end;
+
+/*
+5) Crea un trigger que compruebe que el alumno no se matricula más de una vez en una materia al 
+hacer update. Este error se conoce como mutación
+*/
+create or replace TRIGGET t_matricula
+    before update on matricula
+    for each row
+declare
+    contador INTEGER;
+begin
+select count(*) into contador from matricula where Codal=:old.Codal and Codas=:new.Codas;
+if (contador >= 1) then
+    RAISE_APPLICATION_ERROR (-29125, 'Mutacion');
+end if;
+end;
+
+/*
+6) Un alumno no se puede matricular en asignaturas de segundo curso si tiene materias de primero 
+suspensas de ASIR en el curso 12-13
+*/
+create or repacle trigger segundoASIR before insert on matricula
+for each row
+declare
+    suspensas number;
+BEGIN
+    select count(*) into suspensas
+    from notas
+    inner join asignaturas a on notas.Codas=a.codas
+    where notas.Codal=:new.Codal and a.Nivel='ASIR' and a.Curso='1' and notas.Nota<5 and notas.fecha between '15-09-2013';
+    IF (suspensas >= 1) then
+        raise_application_error(-29126, 'No se puede matricular en segundo curso');
+    END IF;
+END;
+
+/*
+Actividad: Crea una vista y genera el trigger asociado para alumnos aprobados en la materia de 
+GBD. Comprueba el resultado antes y después de tener el trigger al insertar un nuevo alumno
+*/
