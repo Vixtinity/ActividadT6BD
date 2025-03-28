@@ -22,3 +22,12 @@ END;
 INSERT INTO alumnos2 VALUES (2, 'Juan', 'Perez', 'Garcia', 11);
 
 SELECT * FROM alumnos2;
+
+
+create or replace trigger trigger_cambio_apellido
+before update of apellido1 on alumnos2 for each row
+BEGIN
+    IF (:old.apellido1 = "Lopez") THEN
+        RAISE_APPLICATION_ERROR(-25000,'No puedes cambiar el apellido');
+    END IF;
+END;

@@ -1,4 +1,20 @@
--- PAGINA 24 --
+-- PAGINA 17 --
+/*
+¿Cómo sería el código 
+para imprimir tu nombre y apellidos?
+¿Y para calcular el total con IVA al 
+introducir cantidad y precioUnidad?
+*/
+DECLARE
+    nombre VARCHAR(20) := 'Ismael';
+    apellidos VARCHAR(50) := 'Fernandez Lopez';
+BEGIN
+    dbms_output.put_line('Nombre: '||nombre||' Apellidos: '||apellidos);
+END;
+
+
+-- PAGINA 23 --
+
 
 -- ● Realiza un programa que pida el DNI y lo muestre con la letra correspondiente. (enlace)
 DECLARE
@@ -19,19 +35,6 @@ BEGIN
         dbms_output.put_line('El numero es impar');
     END IF;
 END;
-
--- ● Realiza un programa que muestre por pantalla los números pares menores de 100. 
-
-DECLARE
-    i number:=0;
-BEGIN
-    WHILE i < 100 LOOP
-        IF mod(i,2) = 0 THEN
-            dbms_output.PUT_LINE(i);
-        END IF;
-        END LOOP;
-END;
-
 -- ● Escribe un programa que muestre una cadena de asteriscos según el tamaño de un texto (usa length y substr).
 DECLARE
     palabra varchar(600):='Onomatopeya';
@@ -44,6 +47,18 @@ BEGIN
     end loop;
     dbms_output.put_line(salida);
 
+END;
+
+-- ● Realiza un programa que muestre por pantalla los números pares menores de 100. 
+
+DECLARE
+    i number:=0;
+BEGIN
+    WHILE i < 100 LOOP
+        IF mod(i,2) = 0 THEN
+            dbms_output.PUT_LINE(i);
+        END IF;
+        END LOOP;
 END;
 
 /*Realiza un programa que determine si un año es bisiesto desde 1900 (Divisible por 4 y (no 
@@ -95,6 +110,8 @@ BEGIN
         dbms_output.put_line(resultado);
     END;
 
+
+-- PAGINA 27 --
 /*Actividad: Diseña un procedimiento llamado DividirNumero que pasemos como parámetros de entrada: el dividendo y 
 el divisor y devuelva como parámetros de salida: el cociente y el resto.
 Usa este procedimiento en un programa en el que se divida 18 entre 4, y que muestre por pantalla el dividendo, divisor, 
@@ -115,6 +132,38 @@ BEGIN
     dividirnumero(dividendo, divisor, cociente, resto);
     dbms_output.put_Line(dividentro||'/'||divisor||'='||cociente||' resto '||resto);
 END;
+-- PAGINA 29 --
+-- ● Diseña una función que se pasen como parámetros dos números enteros y nos devuelva el mayor de los dos
+create or replace FUNCTION mayor (num1 in number, num2 in number) return number is
+    BEGIN
+        if num1>num2 then
+            return num1;
+        else
+            return num2;
+        end if;
+    END;
+
+--● Diseña una función que sume los números pares desde un valor x a un valor y como parámetros. 
+create or replace FUNCTION sumapares (x in number, y in number) return number is
+    suma number:=0;
+    BEGIN
+        for i in x..y loop
+            if mod(i,2)=0 then
+                suma:=suma+i;
+            end if;
+        end loop;
+        return suma;
+    END;
+
+-- PAGINA 33 --
+--  Crea un procedimiento que dado el código de asignatura saque los datos de la misma. Ej: GBD
+create or replace PROCEDURE datosAsignatura (codigo in varchar2) as
+    nombre varchar(50);
+    curso varchar(50);
+    BEGIN
+        select nombre, curso into nombre, curso from asignaturas where Codas=codigo;
+        dbms_output.put_line('Nombre: '||nombre||' Curso: '||curso);
+    END;
 
 --PAGINA 35--
 -- 1) Crea una función que devuelva el número de alumnos matriculados en GBD en el curso 12-13
@@ -315,15 +364,102 @@ BEGIN
     END LOOP;
 END;
 
-/**
-5)Muestra la información de los alumnos que tienen entre un 7 y 9 pasados 
-como parámetros
+-- PAGINA 46 --
+/*
+Crear un procedimiento con parámetro un número e 
+imprima su raíz cuadrada. Si introducimos una letra la 
+gestionaremos como excepción con VALUE_ERROR y 
+si el número es negativo gestionaremos la excepción 
+nosotros. Emplea en este caso la opción RAISE 
+excepción.`
+YO TENGO QUE PONER EL NUMERO
 */
+create or replace PROCEDURE raizCuadrada (numero IN NUMBER) AS
+    resultado NUMBER;
+    negativo EXCEPTION;
+BEGIN
+    IF numero < 0 THEN
+        RAISE negativo;
+    ELSE
+        resultado := numero**0.5;
+        DBMS_OUTPUT.PUT_LINE(resultado);
+    END IF;
+EXCEPTION
+    WHEN VALUE_ERROR THEN
+        DBMS_OUTPUT.PUT_LINE('Error: No se puede calcular la raíz cuadrada de una letra');
+    WHEN negativo THEN
+        DBMS_OUTPUT.PUT_LINE('Error: No se puede calcular la raíz cuadrada de un número negativo');
+END;
+/*
+Crea un procedimiento que borre los profesores de un 
+departamento. Emplea en este caso la opción 
+RAISE_APPLICATION_ERROR y el cursor SQL.
+*/
+create or replace PROCEDURE borrar (departamento in VARCHAR2) AS
+    BEGIN
+        DELETE profesores where Departamento=depto;
+        IF SQL%NOTFOUND THEN
+            RAISE_APPLICATION_ERROR(-20001, 'No hay profesores en el departamento');
+        END IF;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20002, 'Error al borrar profesores');
+    END;
 
 /*
-6)Muestra la información del alumno que ha obtenido la calificación más alta 
-de la asignatura indicada como parámetro
+Vamos a cambiar la matricula de GBD a SSOO para el alumno 11,pero si no esta los vamos a crear.
+Usa NO_DATA_FOUND
 */
+create or replace PROCEDURE cambiarMatricula AS
+    BEGIN
+        update matricula set Codas='SSOO' where Codal=11 and Codas='GBD';
+        if SQL%NOTFOUND then
+            insert into matricula values (11, 'SSOO', '12-13');
+        end if;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Error al cambiar matricula');
+    END;
 
+    DECLARE
+    RegPro matricula%rowtype;
+    begin
+        select * into RegPro
+        from matricula where Codal=11 and Codas='GBD';
+        IF SQL%NOTFOUND THEN
+            RAISE_APPLICATION_ERROR(-20001, 'No existe el alumno');
+        END IF;
+        update matricula set Codas='SSOO' where Codal=11 and Codas='GBD';
+          dbms_output.put_line('Alumno cambiado de GBD a SSOO');
+          end if;
 
+          EXCEPTION
+          when others then
+          insert into matricula values (11, 'SSOO', '12-13');
+            dbms_output.put_line('Alumno creado y matriculado en SSOO');
+            dbms_output.put_line('Codigo de error '||SQLCODE||' '||SQLERRM);
+            end;
+
+-- PAGINA 54 --
+-- 1) Crea un trigger que compruebe que el alumno es mayor de edad al insertar uno nuevo
+create or replace TRIGGER t_edad
+    before insert on alumnos
+    for each row
+    declare
+        edad number;
+    begin
+        edad:=TRUNC(MONTHS_BETWEEN(SYSDATE, :new.FechaNacimiento) / 12);
+        if edad < 18 then
+            RAISE_APPLICATION_ERROR (-29123, 'Menor de edad')
+            end if;
+    end;
+
+-- 2) Crea un trigger que recoja en una tabla externa los cambios en datos de asignaturas a modo de histórico de cambios
+create or replace TRIGGER t_historico
+    after update on asignaturas
+    for each row
+    begin
+    
+
+    end;
 
